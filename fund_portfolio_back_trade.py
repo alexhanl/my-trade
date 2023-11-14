@@ -193,15 +193,15 @@ def back_trade(portfolio_df, start_date, end_date, rebalance_period, portfolio_f
 
 if __name__ == "__main__":
     
-    portfolio = [['163407', '兴全沪深300', 20],
-         ['050025', '博时标普500', 20],
-         ['000216', '华安黄金ETF', 20],
-         ['000402', '工银纯债债券A', 40]]
+    portfolio = [['163407', '兴全沪深300', 25],
+        #  ['050025', '博时标普500', 20],
+         ['000216', '华安黄金ETF', 25],
+         ['000402', '工银纯债债券A', 50]]
 
     portfolio_df = pd.DataFrame(portfolio, columns=['ticker', 'name', 'target_percent'])
     portfolio_df.set_index('ticker', inplace=True)
     
-    start_date = pd.to_datetime('2018-11-10')
+    start_date = pd.to_datetime('2014-11-10')
     end_date = pd.to_datetime('2023-11-10')
     
     rebalance_period = 180 # 调仓间隔 days
