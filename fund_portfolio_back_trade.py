@@ -201,16 +201,15 @@ if __name__ == "__main__":
     portfolio_df = pd.DataFrame(portfolio, columns=['ticker', 'name', 'target_percent'])
     portfolio_df.set_index('ticker', inplace=True)
     
-    start_date = pd.to_datetime('2020-11-10')
+    start_date = pd.to_datetime('2018-11-10')
     end_date = pd.to_datetime('2023-11-10')
     
-    rebalance_period = 90 # 调仓间隔 days
+    rebalance_period = 180 # 调仓间隔 days
     
     # download the data and save to csv files
-    # for ticker in portfolio_df.index:
-    #     download_and_save_fund_raw_data(ticker)
+    for ticker in portfolio_df.index:
+        download_and_save_fund_raw_data(ticker)
 
-    # load the data from csv files and filter for this analysis
     portfolio_funds_data_df = load_potifolio_funds_data(portfolio_df.index, start_date, end_date)
     
     portfolio_value_series, max_dd, dd_peak_date, dd_bottom_date, dd_peak_value, dd_bottom_value = back_trade(portfolio_df, start_date, end_date, rebalance_period, portfolio_funds_data_df)
@@ -237,7 +236,7 @@ if __name__ == "__main__":
     
     
        
-    # 展示图标
+    # 展示图
     plt_data_df = portfolio_funds_data_df
     for ticker in plt_data_df.columns:
         plt_data_df = plt_data_df.rename(columns={ticker: ticker + portfolio_df.loc[ticker, 'name']})    
