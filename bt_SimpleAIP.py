@@ -25,8 +25,10 @@ class SimpleAIPStrategy(bt.Strategy):   # Automatic investment plan (SIP) 基金
         self.buyprice = None
         self.buycomm = None
         
-        self.cash_per_month = 10000.0
+        self.cash_per_month = 1000.0
         self.counter = 0
+        
+        self.rsi = bt.indicators.RSI_SMA(self.data.close, period=14)
  
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -65,10 +67,17 @@ class SimpleAIPStrategy(bt.Strategy):   # Automatic investment plan (SIP) 基金
         if self.order:  # 检查是否有指令等待执行,
             return
         
+        assert(self.rsi, bt.indicators.rsi.RSI_SMA)
+        if (self.rsi > 30):
+            print(self.rsi)
+        
+        
         if self.counter == 12 and self.position:
             # self.order = self.sell(size=self.position.size)
             self.counter = 0
             return
+
+        
             
         today = self.datas[0].datetime.date(ago=0)
         yesterday = self.datas[0].datetime.date(ago=-1)
@@ -96,6 +105,7 @@ if __name__ == '__main__':
     
     # 把 date 作为日期索引，以符合 Backtrader 的要求
     hs300_index_data_df.index = pd.to_datetime(hs300_index_data_df['date'])
+    
 
     cerebro = bt.Cerebro()  # 初始化回测系统
     start_date = datetime(2022, 11, 1)  # 回测开始时间
@@ -121,5 +131,7 @@ if __name__ == '__main__':
     
     cerebro.plot()
 
-
     # 结合PE
+    # 结合RSI
+    # 结合SAR
+    
