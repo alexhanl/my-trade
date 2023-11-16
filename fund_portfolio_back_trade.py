@@ -194,24 +194,32 @@ def back_trade(portfolio_df, start_date, end_date, rebalance_period, portfolio_f
 if __name__ == "__main__":
     
     portfolio = [
-        ['163407', '兴全沪深300', 20],
+        ['163407', '兴全沪深300', 10],
         # ['110020', '易方达沪深300ETF连接', 20],
-        ['050025', '博时标普500', 20],
-        ['000216', '华安黄金ETF', 20],
-        ['000402', '工银纯债债券A', 40]
+        # ['050025', '博时标普500', 20],
+        # ['000216', '华安黄金ETF', 20],
+        # ['000402', '工银纯债债券A', 10],  # bad
+        # ['000205', '易方达投资级信用债', 10], # bad
+        # ['100066', '富国纯债', 10],  # bad
+        ['400030', '东方天益', 10],  # good
+        ['000914', '中加纯债', 10],  # good  最大回撤 2.7
+        ['004388', '鹏华债券', 10],  # good
+        ['100018', '富国天利', 10],
+        ['217022', '招商产业债券A', 10], 
+        ['003568', '平安惠利', 10] # ok
         ]
 
     portfolio_df = pd.DataFrame(portfolio, columns=['ticker', 'name', 'target_percent'])
     portfolio_df.set_index('ticker', inplace=True)
     
-    start_date = pd.to_datetime('2014-11-10')
+    start_date = pd.to_datetime('2020-11-10')
     end_date = pd.to_datetime('2023-11-10')
     
     rebalance_period = 90 #000000000 # 调仓间隔 days
     
     # download the data and save to csv files
-    # for ticker in portfolio_df.index:
-    #     download_and_save_fund_raw_data(ticker)
+    for ticker in portfolio_df.index:
+        download_and_save_fund_data(ticker)
 
     portfolio_funds_data_df = load_potifolio_funds_data(portfolio_df.index, start_date, end_date)
     
