@@ -171,19 +171,25 @@ def back_trade(portfolio_df, start_date, end_date, rebalance_period, portfolio_f
                                                 axis=0, ignore_index=True)
             portfolio_value = portfolio_value + fund_value
 
-        # portfolio_value_list.append(portfolio_value)
         portfolio_total_value_series[date] = portfolio_value
         
         # 重平衡，为了计算简单，直接在盘后即进行变更，并修正最后一行的数据（即当天的数据）
         if day_counter % rebalance_period == 0: 
+            print("---- 阶段业绩：  {} - {} ----".format( (date - pd.Timedelta(days=rebalance_period)).date(), date.date()))
             for ticker in portfolio_df.index:
                 fund_value_df = funds_value_dict[ticker]
                 target_percent = portfolio_df.loc[ticker, 'target_percent']
-                fund_value_change = portfolio_value * target_percent/100 - fund_value_df['fund_value'].iloc[-1]  # 正数表示有亏损，需要加仓。负数相反
+                fund_value_change = portfolio_value * target_percent/100 - fund_value_df['fund_value'].iloc[-1]  # 正数表示，需要加仓。负数相反
+                
+                fund_name = portfolio_df.loc[ticker, 'name']
+                profit = fund_value_df['fund_value'].iloc[-1] - fund_value_df['fund_value'].iloc[-rebalance_period]
+                print("{} 利润比例为 {:.2f} %".format(fund_name, profit/fund_value_df['fund_value'].iloc[-rebalance_period] * 100))
+                
                 shares_change =  fund_value_change / fund_value_df['net_value'].iloc[-1]  # 正数表示需要增加份额
                 fund_value_df.loc[fund_value_df.index[-1], 'shares'] += shares_change
                 fund_value_df.loc[fund_value_df.index[-1], 'fund_value'] = portfolio_value * target_percent/100
-        
+            print('------')
+            
     max_dd, dd_peak_date, dd_bottom_date, dd_peak_value, dd_bottom_value = calculate_max_dd(portfolio_total_value_series)
     
     return portfolio_total_value_series, max_dd, dd_peak_date, dd_bottom_date, dd_peak_value, dd_bottom_value
@@ -194,24 +200,44 @@ def back_trade(portfolio_df, start_date, end_date, rebalance_period, portfolio_f
 if __name__ == "__main__":
     
     portfolio = [
-        ['163407', '兴全沪深300', 20],
-        # ['110020', '易方达沪深300ETF连接', 20],
+        ['000368', '汇添富沪深300安中指数A', 20],
         ['050025', '博时标普500', 20],
         ['000216', '华安黄金ETF', 20],
-        ['000402', '工银纯债债券A', 40]
+        ['400030', '东方天益', 8], 
+        ['000914', '中加纯债', 8],  
+        ['004388', '鹏华债券', 8], 
+        ['100018', '富国天利', 8],
+        ['000187', '华泰博瑞', 8]
         ]
+    
+    # portfolio = [
+    #     # ['163407', '兴全沪深300', 20],
+    #     ['000368', '汇添富沪深300安中指数A', 20],
+    #     # ['000656', '前海开源沪深300指数A', 20],
+    #     # ['160807', '长盛沪深300指数', 20],
+    #     # ['002670', '万家沪深300指数增强A', 20],
+    #     # ['110020', '易方达沪深300ETF连接', 20],
+    #     ['050025', '博时标普500', 20],
+    #     ['000216', '华安黄金ETF', 20],
+    #     ['400030', '东方天益', 8],  # good
+    #     ['000914', '中加纯债', 8],  # good  
+    #     ['004388', '鹏华债券', 8],  # good
+    #     ['100018', '富国天利', 8],
+    #     ['530021', '建信纯债债券', 8],
+    #     # ['000187', '华泰博瑞', 8]
+    #     ]
 
     portfolio_df = pd.DataFrame(portfolio, columns=['ticker', 'name', 'target_percent'])
     portfolio_df.set_index('ticker', inplace=True)
     
-    start_date = pd.to_datetime('2014-11-10')
+    start_date = pd.to_datetime('2018-11-10')
     end_date = pd.to_datetime('2023-11-10')
     
-    rebalance_period = 90 #000000000 # 调仓间隔 days
+    rebalance_period = 180#0000000 # 调仓间隔 days
     
     # download the data and save to csv files
-    # for ticker in portfolio_df.index:
-    #     download_and_save_fund_raw_data(ticker)
+    for ticker in portfolio_df.index:
+        download_and_save_fund_data(ticker)
 
     portfolio_funds_data_df = load_potifolio_funds_data(portfolio_df.index, start_date, end_date)
     
