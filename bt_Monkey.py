@@ -20,18 +20,21 @@ class MonkeyStrategy(bt.Strategy):
         
     def __init__(self):
         self.close_price = self.datas[0].close  # 指定价格序列
-        self.rsi = self.datas[0].rsi
+        # self.rsi = self.datas[0].rsi
         self.fear_greed = self.datas[0].fear_greed
+        
+        
+        self.psar = bt.ind.ParabolicSAR(period=20, af = 0.01)
+        # self.sma = bt.indicators.SimpleMovingAverage(self.data)
+        self.rsi = bt.indicators.RSI_Safe(self.data.close, period=14)
         
         # To keep track of pending orders and buy price/commission
         self.order = None
         self.buyprice = None
         self.buycomm = None
         
-        self.psar = bt.ind.ParabolicSAR(period=20)
-        self.sma = bt.indicators.SimpleMovingAverage(self.data)
-        # self.rsi = bt.indicators.RSI_Safe(self.data.close, period=14)
-        
+        self.buy_signal = 0
+        self.sell_signal = 0
         
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -72,12 +75,30 @@ class MonkeyStrategy(bt.Strategy):
         #     return -1
         
         
-        if self.rsi[0] < 30:
-            return 1
-        elif self.rsi[0] > 70:
-            return -1
+        # if self.rsi[0] < 30:
+        #     return 1
+        # elif self.rsi[0] > 70:
+        #     return -1
+        
+        
+        if self.psar[0] < self.close_price[0]:
+            if self.buy_signal == 3:
+                self.buy_signal = 0
+                self.sell_signal = 0
+                return 1
+            else:
+                self.buy_signal = self.buy_signal + 1
+        elif self.psar[0] > self.close_price[0]:
+            if self.sell_signal == 3:
+                self.sell_signal = 0
+                self.buy_signal = 0
+                return -1
+            else:
+                self.sell_signal = self.sell_signal + 1
         
         return 0
+    
+    
     
     def next(self):
         
