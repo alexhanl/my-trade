@@ -24,7 +24,7 @@ class MonkeyStrategy(bt.Strategy):
         self.fear_greed = self.datas[0].fear_greed
         
         
-        self.psar = bt.ind.ParabolicSAR(period=20, af = 0.01)
+        self.psar = bt.ind.ParabolicSAR(period=20, af = 0.02)
         # self.sma = bt.indicators.SimpleMovingAverage(self.data)
         self.rsi = bt.indicators.RSI_Safe(self.data.close, period=14)
         
@@ -82,20 +82,21 @@ class MonkeyStrategy(bt.Strategy):
         
         
         if self.psar[0] < self.close_price[0]:
-            if self.buy_signal == 3:
+            return 1
+            self.sell_signal = 0
+            if self.buy_signal == 1:
                 self.buy_signal = 0
-                self.sell_signal = 0
                 return 1
             else:
                 self.buy_signal = self.buy_signal + 1
         elif self.psar[0] > self.close_price[0]:
-            if self.sell_signal == 3:
+            return -1
+            self.buy_signal = 0
+            if self.sell_signal == 1:
                 self.sell_signal = 0
-                self.buy_signal = 0
                 return -1
             else:
-                self.sell_signal = self.sell_signal + 1
-        
+                self.sell_signal = self.sell_signal + 1    
         return 0
     
     
@@ -163,7 +164,7 @@ if __name__ == '__main__':
     
     cerebro = bt.Cerebro()  # 初始化回测系统
     # cerebro = bt.Cerebro(stdstats=False)
-    start_date = datetime(2018, 1, 30)  # 回测开始时间
+    start_date = datetime(2023, 5, 30)  # 回测开始时间
     end_date = datetime(2023, 10, 30)  # 回测结束时间
     
     data = CustomPandasData(dataname=data_df, fromdate=start_date, todate=end_date, rsi=6, fear_greed=7)
@@ -173,7 +174,8 @@ if __name__ == '__main__':
     cerebro.addstrategy(MonkeyStrategy)  # 将交易策略加载到回测系统中
     start_cash = 1000000
     cerebro.broker.setcash(start_cash)  # 设置初始资本为 1,000,000
-    cerebro.broker.setcommission(commission=0.00012)  # 设置交易手续费为 万分之 1.2
+    # cerebro.broker.setcommission(commission=0.00012)  # 设置交易手续费为 万分之 1.2
+    cerebro.broker.set_coc(True) # 以订单创建日的收盘价成交 cheat-on-close
             
     cerebro.addobserver(bt.observers.Value)
     cerebro.addobserver(bt.observers.BuySell)
