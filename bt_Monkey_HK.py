@@ -20,12 +20,8 @@ class MonkeyStrategy(bt.Strategy):
         
     def __init__(self):
         self.close_price = self.datas[0].close  # 指定价格序列
-        # self.rsi = self.datas[0].rsi
-        self.fear_greed = self.datas[0].fear_greed
         
-        
-        self.psar = bt.ind.ParabolicSAR(period=20, af = 0.02)
-        # self.sma = bt.indicators.SimpleMovingAverage(self.data)
+        self.psar = bt.ind.ParabolicSAR(period=20, af = 0.01)
         self.rsi = bt.indicators.RSI_Safe(self.data.close, period=14)
         
         # To keep track of pending orders and buy price/commission
@@ -73,13 +69,11 @@ class MonkeyStrategy(bt.Strategy):
         #     return 1
         # elif self.fear_greed[0] > 75:
         #     return -1
-        
-        
+                
         # if self.rsi[0] < 30:
         #     return 1
         # elif self.rsi[0] > 70:
         #     return -1
-        
         
         if self.psar[0] < self.close_price[0]:
             return 1
@@ -97,37 +91,28 @@ class MonkeyStrategy(bt.Strategy):
                 return -1
             else:
                 self.sell_signal = self.sell_signal + 1    
+                
         return 0
     
     
     
     def next(self):
-        
-        # txt = ['{:4d}'.format(len(self))]
-        # txt.append('{}'.format(self.datetime.date()))
-        # txt.append('{:.2f}'.format(self.psar[0]))
-        # print(','.join(txt))
-        
-        # return
-        
         if self.order:  # 检查是否有指令等待执行,
             return
         
-        
         # self.log('Close: {:.2f}, RSI:  {:.2f}, Fear_Greed: {:.2f}'.format(self.close_price[0], self.rsi[0], self.fear_greed[0]))
-        # assert(self.rsi, bt.indicators.rsi.RSI_SAFE)
         
         signal = self.check_signals()
         
         # if self.fear_greed[0] < 25:
         if signal == 1:
-            size = int(cerebro.broker.get_cash() / self.close_price[0]) -1
+            size = int(cerebro.broker.get_cash() / self.close_price[0]) 
             if size > 0:
-                self.log('Indicators for BUY: RSI: %.2f, Fear_Greed: %.2f' % (self.rsi[0], self.fear_greed[0]))
+                self.log('Indicators for BUY: RSI: %.2f' % (self.rsi[0]))
                 self.log('BUY CREATE, Price = %.2f, Shares = %.2f' % (self.close_price[0], size))
                 self.order = self.buy(size=size)
         elif signal == -1 and self.position.size > 0:
-            self.log('Indicators for SELL: RSI: %.2f, Fear_Greed: %.2f' % (self.rsi[0], self.fear_greed[0]))
+            self.log('Indicators for SELL: RSI: %.2f' % (self.rsi[0]))
             self.log('SELL CREATE, Price = %.2f, Shares = %.2f' % (self.close_price[0], self.position.size))
             self.order = self.sell(size=self.position.size)
 
@@ -135,39 +120,23 @@ class MonkeyStrategy(bt.Strategy):
 DATA_PATH='./data'
 
 class CustomPandasData(bt.feeds.PandasData):
-    lines = ('rsi', 'fear_greed')
-    params = (('rsi', -1), ('fear_greed', -1))
+    lines = ('rsi',)
+    params = (('rsi', -1),)
     plotinfo = {"plot": True, "subplot": True}
-
-class CustomObserver(bt.Observer):
-    lines = ('rsi', 'fear_greed',)
-
-    plotinfo = dict(plot=True, subplot=True)
-
-    def next(self):
-        self.lines.rsi[0] = self.datas[0].rsi[0]
-        self.lines.fear_greed[0] = self.datas[0].fear_greed[0]
 
 if __name__ == '__main__':
     
-    ticker = 'spy'
+    ticker = '3032.HK'
     data_df = pd.read_csv(os.path.join(DATA_PATH, ticker + '.csv'))
     data_df['date'] = pd.to_datetime(data_df['date'], format='%Y-%m-%d') 
     data_df.set_index('date', inplace=True)
     
-    fear_greed_index_df = pd.read_csv(os.path.join(DATA_PATH, 'all_fng_csv.csv'))
-    fear_greed_index_df.rename(columns={'Date': 'date'}, inplace=True)
-    fear_greed_index_df['date'] = pd.to_datetime(fear_greed_index_df['date'], format='%Y-%m-%d') 
-    fear_greed_index_df.set_index('date', inplace=True)
-    
-    data_df['fear_greed'] = fear_greed_index_df['Fear Greed']    
-    
     cerebro = bt.Cerebro()  # 初始化回测系统
     # cerebro = bt.Cerebro(stdstats=False)
-    start_date = datetime(2023, 5, 30)  # 回测开始时间
-    end_date = datetime(2023, 10, 30)  # 回测结束时间
+    start_date = datetime(2020, 9, 2)  # 回测开始时间
+    end_date = datetime(2023, 11, 28)  # 回测结束时间
     
-    data = CustomPandasData(dataname=data_df, fromdate=start_date, todate=end_date, rsi=6, fear_greed=7)
+    data = CustomPandasData(dataname=data_df, fromdate=start_date, todate=end_date, rsi=6)
 
     cerebro.adddata(data)
     
@@ -178,14 +147,9 @@ if __name__ == '__main__':
     cerebro.broker.set_coc(True) # 以订单创建日的收盘价成交 cheat-on-close
             
     cerebro.addobserver(bt.observers.Value)
-    cerebro.addobserver(bt.observers.BuySell)
-    cerebro.addobserver(CustomObserver)
-    # cerebro.addobserver(bt.observers.DrawDown)
-    
+    cerebro.addobserver(bt.observers.BuySell)    
     
     cerebro.run(stdstats=False)  # 运行回测系统
-    
-    # assert(broker, bt.brokers.bbroker.BackBroker)    
 
     port_value = cerebro.broker.getvalue()  # 获取回测结束后的总资金
     pnl = port_value - start_cash  # 盈亏统计
@@ -196,12 +160,10 @@ if __name__ == '__main__':
     
     start_price = data_df['close'][start_date]
     end_price = data_df['close'][end_date]
-    print('市场标普500, 起始日: {:.2f}, 结束日：{:.2f}, 涨幅：{:.2f}%  '.format(start_price, end_price, (end_price/start_price-1)*100))
+    print('起始日: {:.2f}, 结束日：{:.2f}, 涨幅：{:.2f}%  '.format(start_price, end_price, (end_price/start_price-1)*100))
     
     
     cerebro.plot()
 
-    # # 结合PE
-    # # 结合RSI
-    # # 结合SAR
+
     
