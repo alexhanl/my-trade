@@ -114,14 +114,32 @@ class MonkeyStrategy(bt.Strategy):
 
     def check_indicators(self): 
         
+        signals = []
+        
         if self.p.fear_greed:
-            return self.check_fear_greed_indicator()
+            signals.append(self.check_fear_greed_indicator())
         
         if self.p.rsi:
-            return self.check_rsi_indicator()
+            signals.append(self.check_rsi_indicator())
         
         if self.p.psar:
-            return self.check_psar_indicator()
+            signals.append(self.check_psar_indicator())
+        
+        num_of_buy = signals.count(BUY_SIGNAL)
+        if num_of_buy / len(signals) > 0.5:
+            return BUY_SIGNAL
+        
+        num_of_sell = signals.count(SELL_SIGNAL)
+        if num_of_sell / len(signals) > 0.5:
+            return SELL_SIGNAL
+        
+        # if all(i == BUY_SIGNAL for i in signals): 
+        #     return BUY_SIGNAL
+        
+        # if all(i == SELL_SIGNAL for i in signals):
+        #     return SELL_SIGNAL  
+             
+        
         
         return NO_SIGNAL
         
@@ -163,6 +181,7 @@ class CustomObserver(bt.Observer):
         self.lines.rsi[0] = self.datas[0].rsi[0]
         self.lines.fear_greed[0] = self.datas[0].fear_greed[0]
 
+
 def run_strategy(ticker: str = 'spy', 
                  start_date: datetime = datetime(2023, 1, 1), 
                  end_date: datetime = datetime(2023, 12, 31), 
@@ -173,7 +192,10 @@ def run_strategy(ticker: str = 'spy',
                  rsi_oversold: int = 30, 
                  rsi_overbought: int = 70,
                  psar: bool = False,
-                 psar_sensitivity: int = 1):
+                 psar_sensitivity: int = 1,
+                 plotting: bool = False,
+                 logging: bool = False):
+    
     data_df = pd.read_csv(os.path.join(DATA_PATH, ticker + '.csv'))
     data_df['date'] = pd.to_datetime(data_df['date'], format='%Y-%m-%d') 
     data_df.set_index('date', inplace=True)
@@ -216,21 +238,27 @@ def run_strategy(ticker: str = 'spy',
     port_value = cerebro.broker.getvalue()  # 获取回测结束后的总资金
     pnl = port_value - start_cash  # 盈亏统计
 
-    
-    # print(f"初始资金: {start_cash}\n回测期间: {start_date.strftime('%Y%m%d')} - {end_date.strftime('%Y%m%d')}")
-    # print(f"总资金: {round(port_value, 2)}")
-    # print(f"净收益: {round(pnl, 2)}")
+    if logging:
+        print(f"初始资金: {start_cash}\n回测期间: {start_date.strftime('%Y%m%d')} - {end_date.strftime('%Y%m%d')}")
+        print(f"总资金: {round(port_value, 2)}")
+        print(f"净收益: {round(pnl, 2)}")
     
     start_price = data_df['close'].iloc[0]
     end_price = data_df['close'].iloc[-1]
-    # print('市场标普500, 起始日: {:.2f}, 结束日：{:.2f}, 涨幅：{:.2f}%  '.format(start_price, end_price, (end_price/start_price-1)*100))
+    
+    if logging:
+        print('{}, 起始日: {:.2f}, 结束日：{:.2f}, 涨幅：{:.2f}%  '.format(ticker, start_price, end_price, (end_price/start_price-1)*100))
+    
+    if plotting:
+        cerebro.plot()
     
     return round(pnl/10000, 2), round((end_price/start_price-1)*start_cash/10000, 2)
-    # cerebro.plot()
+    
 
 
 def backtrade_single_signal():
     bull_period = (datetime(2020,3,16), datetime(2022,1,4))
+    # bull_period = (datetime(2021,1,22), datetime(2022,1,4))
     bear_period = (datetime(2022,1,3), datetime(2022,10,25))
     volatile_period = (datetime(2006,1,31), datetime(2012,6,12))
     periods = [bull_period, bear_period, volatile_period]
@@ -246,25 +274,78 @@ def backtrade_single_signal():
     #     for fng_threshold in fng_thresholds:
     #         print(run_strategy(start_date=period[0], end_date=period[1], 
     #                            fear_greed=True, fear_greed_extreme_fear=fng_threshold[0], fear_greed_extreme_greed=fng_threshold[1]))
+    #     --- 牛市 ---
+    #     (32.71, 99.1)
+    #     (40.7, 99.1)
+    #     (25.82, 99.1)
+    #     --- 熊市 ---
+    #     (-8.77, -19.42)
+    #     (-14.44, -19.42)
+    #     (-8.77, -19.42)
+    #     --- 震荡市 ---
+    #     (-4.53, 4.25)
+    #     (-5.35, 4.25)
+    #     (-4.36, 4.25)
     # 只有在熊市，恐贪指数比较有效，并且需要设置较低的情绪值, 但是不能盈利，只是保证比较小的亏损
     
-    for period in periods:
-        print(run_strategy(start_date=period[0], end_date=period[1], psar=True))
+    # for period in periods:
+    #     print(run_strategy(start_date=period[0], end_date=period[1], psar=True))
+    # (30.33, 99.1)
+    # (-4.11, -19.42)
+    # (-13.36, 4.25)
     # 只有在熊市，psar比较有效，但是不能盈利，只是保证比较小的亏损
     
-    std_rsi_threshold = (30, 70)
-    aggre_rsi_threshold = (35, 75)
-    conserv_rsi_threshold = (25, 65)
-    rsi_threholds = [std_rsi_threshold, aggre_rsi_threshold, conserv_rsi_threshold]
+    run_strategy(start_date=bull_period[0], end_date=bull_period[1], psar=True, logging=True, plotting=True)
+    
+    # std_rsi_threshold = (30, 70)
+    # aggre_rsi_threshold = (35, 75)
+    # conserv_rsi_threshold = (25, 65)
+    # rsi_threholds = [std_rsi_threshold, aggre_rsi_threshold, conserv_rsi_threshold]
     
     # for period in periods:
     #     print('---')
     #     for rsi_threhold in rsi_threholds:
     #         print(run_strategy(start_date=period[0], end_date=period[1], 
     #                            rsi=True, rsi_oversold=rsi_threhold[0], rsi_overbought=rsi_threhold[1]))
+    # ---牛市---
+    # (0.0, 99.1)
+    # (7.57, 99.1)
+    # (0.0, 99.1)
+    # ---熊市---
+    # (5.89, -19.42)
+    # (-10.39, -19.42)
+    # (0.0, -19.42)
+    # ---震荡市---
+    # (-2.93, 4.25)
+    # (-1.24, 4.25)
+    # (-13.77, 4.25)
     # 在熊市中，rsi 比较有效， 但是需要采用较为保守的策略。
 
 
+def backtrade_mixed_signal():
+    bull_period = (datetime(2020,3,16), datetime(2022,1,4))
+    # bull_period = (datetime(2021,1,22), datetime(2022,1,4))
+    bear_period = (datetime(2022,1,3), datetime(2022,10,25))
+    volatile_period = (datetime(2006,1,31), datetime(2012,6,12))
+    long_period = (datetime(2010,1,31), datetime(2023,11,12))
+    periods = [bull_period, bear_period, volatile_period]
+    
+    
+    std_fng_threshold = (25, 75)
+    aggre_fng_threshold = (30, 80)
+    conserv_fng_threshold = (20, 70)
+    fng_thresholds = [std_fng_threshold, aggre_fng_threshold, conserv_fng_threshold]
+    
+    # for period in periods:
+    #     print('---')
+    #     for fng_threshold in fng_thresholds:
+    #         print(run_strategy(start_date=period[0], end_date=period[1], 
+    #                            fear_greed=True, rsi=True, psar=True))
+    
+    print(run_strategy(start_date=long_period[0], end_date=long_period[1], 
+                               fear_greed=True, rsi=True, psar=True, plotting=True))
+    
+    
 if __name__ == '__main__':
     
     # run_strategy(ticker='spy', 
@@ -272,7 +353,4 @@ if __name__ == '__main__':
     #              end_date=datetime(2023, 11, 24)
     #              )
     
-    backtrade_single_signal()
-    
-
-        
+    backtrade_mixed_signal()
