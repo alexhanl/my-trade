@@ -200,7 +200,7 @@ def back_trade(portfolio_df, start_date, end_date, rebalance_period, portfolio_f
 if __name__ == "__main__":
     
     portfolio = [
-        ['000368', '汇添富沪深300安中指数A', 20],
+        ['000368', '汇添富沪深300安中指数A', 20],  
         ['050025', '博时标普500', 20],
         ['000216', '华安黄金ETF', 20],
         ['400030', '东方天益', 8], 

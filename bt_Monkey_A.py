@@ -21,7 +21,7 @@ class MonkeyStrategy(bt.Strategy):
     def __init__(self):
         self.close_price = self.datas[0].close  # 指定价格序列
         
-        self.psar = bt.ind.ParabolicSAR(period=20, af = 0.02)
+        self.psar = bt.ind.ParabolicSAR(period=20, af = 0.015)
         # self.sma = bt.indicators.SimpleMovingAverage(self.data)
         self.rsi = bt.indicators.RSI_Safe(self.data.close, period=14)
         

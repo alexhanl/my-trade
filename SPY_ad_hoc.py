@@ -21,8 +21,10 @@ five_years_ago = today - timedelta(days=5*365)
 three_yeas_ago = today - timedelta(days=3*365)
 one_year_ago = today - timedelta(days=365)
 
+last_date = datetime(2023,11,24)
 
-start_date = datetime(2022,1,1)
+
+start_date = datetime(2016,1,1)
 end_date = today
 
 
@@ -54,15 +56,19 @@ ax1.grid(True, axis='x')
 ax1.yaxis.set_major_locator(ticker.MultipleLocator(10))
     
 ax2 = ax1.twinx()
-ax2.plot(x, y2, 'g-')
-ax2.set_ylabel('fear_greed', color='g')
+ax2.plot(x, y2, 'r-')
+ax2.set_ylabel('fear_greed', color='r')
 for tl in ax2.get_yticklabels():
-    tl.set_color('g')
+    tl.set_color('r')
 
-ax2.axhline(y=25, color='r', linestyle='dashed')
-ax2.axhline(y=75, color='r', linestyle='dashed')
+ax2.axhline(y=25, color='grey', linestyle='dashed')
+ax2.axhline(y=75, color='grey', linestyle='dashed')
 ax2.yaxis.set_major_locator(ticker.MultipleLocator(5))
 
 plt.title('SPY')
 
 plt.show()
+
+
+if __name__ == '__main__':
+    pass
