@@ -21,10 +21,10 @@ if __name__ == "__main__":
     start_date = pd.to_datetime('2020-04-22')
     end_date = pd.to_datetime('2024-04-22')
     
-    rebalance_days = 365  # 每 365 天 rebalance 一次
+    rebalance_days = 220  # 每 220 个交易日 rebalance 一次
 
-    portfolio_funds_data_df = load_portfolio_funds_data(portfolio_df.index, start_date, end_date)
-    portfolio_value_series = fund_portfolio_back_trade(portfolio_df, start_date, end_date, rebalance_days, portfolio_funds_data_df)
+    portfolio_funds_data_df = load_portfolio_funds_data(portfolio_df.index, start_date, end_date).ffill().bfill()  # 使用 bfill() 是为了防止第一行数据出现空值
+    portfolio_value_series = fund_portfolio_back_trade(portfolio_df, portfolio_funds_data_df, rebalance_days)
     
     # 计算相关 KPI，并展示结果
     max_dd, dd_peak_date, dd_bottom_date, dd_peak_value, dd_bottom_value = calculate_max_dd(portfolio_value_series)
@@ -62,6 +62,7 @@ if __name__ == "__main__":
         plt_data_df[column_name] = (plt_data_df[column_name] - start_date_value) / start_date_value * 100
     
     plt_data_df.plot(grid=True, xlabel='时间', ylabel='价值走势', figsize=(12, 6))
+    plt.xlim(plt_data_df.index.min(), plt_data_df.index.max())  # 设置x轴的范围以适应数据范围
     plt.tight_layout()
     plt.show()
     
