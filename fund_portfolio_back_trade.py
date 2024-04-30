@@ -4,7 +4,7 @@ import pandas as pd
 import fund_code
 
 from fund_data_prepare_util import load_portfolio_funds_data
-from fund_data_calc_util import calculate_max_dd
+from fund_backtrade_util import calculate_max_dd
 from fund_backtrade_util import fund_portfolio_back_trade
 
 
