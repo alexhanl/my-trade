@@ -4,9 +4,7 @@ import pandas as pd
 import fund_code
 
 from fund_data_prepare_util import load_portfolio_funds_data
-from fund_backtrade_util import calculate_max_dd
-from fund_backtrade_util import fund_portfolio_back_trade
-
+from fund_backtrade_util import calculate_max_dd, fund_portfolio_back_trade
 
 plt.rcParams["font.sans-serif"] = ["SimHei"]  # 设置字体
 plt.rcParams["axes.unicode_minus"] = False    # 该语句解决图像中的“-”负号的乱码问题
@@ -18,7 +16,7 @@ if __name__ == "__main__":
     portfolio_df = pd.DataFrame(fund_code.Portfolio_LaoHuangNiu, columns=fund_code.Portfolio_Columns)
     portfolio_df.set_index('ticker', inplace=True)
     
-    start_date = pd.to_datetime('2020-04-22')
+    start_date = pd.to_datetime('2015-04-22')
     end_date = pd.to_datetime('2024-04-22')
     
     rebalance_days = 220  # 每 220 个交易日 rebalance 一次
@@ -52,8 +50,13 @@ if __name__ == "__main__":
        
     # 展示曲线图
     plt_data_df = portfolio_funds_data_df
+    
+    # remove the FIXED TYPE funds from the plot data, as we are not interested in their performance in the backtest.
+    plt_data_df = plt_data_df.drop(columns={ticker for ticker in plt_data_df.columns if portfolio_df.loc[ticker, 'type'] == fund_code.TYPE_FIXED})
+
     for ticker in plt_data_df.columns:
         plt_data_df = plt_data_df.rename(columns={ticker: ticker + portfolio_df.loc[ticker, 'name']})    
+    
     plt_data_df['投资组合'] = portfolio_value_series
     
     # 将每个列中的值改成 percent 表示
