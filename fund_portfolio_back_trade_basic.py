@@ -16,7 +16,7 @@ if __name__ == "__main__":
     portfolio_df = pd.DataFrame(fund_code.Portfolio_LaoHuangNiu, columns=fund_code.Portfolio_Columns)
     portfolio_df.set_index('ticker', inplace=True)
     
-    start_date = pd.to_datetime('2015-04-22')
+    start_date = pd.to_datetime('2016-01-01')
     end_date = pd.to_datetime('2024-04-22')
     
     rebalance_days = 220  # 每 220 个交易日 rebalance 一次
@@ -37,7 +37,12 @@ if __name__ == "__main__":
     print("最大回撤开始日期: {}, 结束日期: {}, 持续 {} 天".format(dd_peak_date.strftime('%Y-%m-%d'), dd_bottom_date.strftime('%Y-%m-%d'), (dd_bottom_date-dd_peak_date).days))
     print("最大回撤: {:.2f} - {:.2f} = {:.2f}, 回撤比例: {:.2f}%".format(dd_peak_value, dd_bottom_value, max_dd, max_dd_percent))
     
-    print("组合成员的情况：")
+    print("\n投资组合每年收益率")
+    for year, year_df in portfolio_value_series.groupby(portfolio_value_series.index.year):
+        year_profit_percent = (year_df.iloc[-1] - year_df.iloc[0])/year_df.iloc[0] * 100
+        print("{} 年，收益率 {:.2f} %".format(year, year_profit_percent))
+        
+    print("\n组合成员的情况：")
     for ticker in portfolio_funds_data_df.columns:
         start_value = portfolio_funds_data_df[ticker].iloc[0]
         end_value = portfolio_funds_data_df[ticker].iloc[-1]
@@ -46,6 +51,9 @@ if __name__ == "__main__":
         max_dd, dd_peak_date, dd_bottom_date, dd_peak_value, dd_bottom_value = calculate_max_dd(portfolio_funds_data_df[ticker])
         max_dd_percent = max_dd/dd_peak_value*100
         print("{} {}: 利润 {:.2f}%, 年化：{:.2f}%, 最大回撤：{:.2f}%".format(ticker, portfolio_df.loc[ticker, 'name'], profit_percent, annaulized_profit_percent, max_dd_percent))
+    
+    
+    
     
        
     # 展示曲线图
