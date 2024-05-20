@@ -7,14 +7,17 @@ TYPE_FIXED = 'fixed'  # 固定收益型
 Portfolio_Columns = ['ticker', 'name', 'target_percent', 'type']
 
 # Portfolio_LaoHuangNiu = [
-#     ['000368', '汇添富沪深300安中指数A', 30, TYPE_EQUITY],  
-#     ['050025', '博时标普500', 40, TYPE_EQUITY],
-#     ['000216', '华安黄金ETF', 30, TYPE_EQUITY],
-#     # ['400030', '东方天益', 10, TYPE_FIXED], 
-#     # ['000914', '中加纯债', 10, TYPE_FIXED], 
-#     # ['000032', '易方达信用债', 10, TYPE_FIXED],  
-#     # ['000187', '华泰博瑞', 10, TYPE_FIXED]
+#     ['000368', '汇添富沪深300安中指数A', 10, TYPE_EQUITY],  
+#     ['050025', '博时标普500', 10, TYPE_EQUITY],
+#     ['000216', '华安黄金ETF', 10, TYPE_EQUITY],
+#     ['400030', '东方天益', 17.5, TYPE_FIXED], 
+#     ['000914', '中加纯债', 17.5, TYPE_FIXED], 
+#     ['000032', '易方达信用债', 17.5, TYPE_FIXED],  
+#     ['000187', '华泰博瑞', 17.5, TYPE_FIXED]
 # ]
+
+
+
 
 
 
@@ -27,9 +30,6 @@ Portfolio_LaoHuangNiu = [
     ['000032', '易方达信用债', 10, TYPE_FIXED],  
     ['000187', '华泰博瑞', 10, TYPE_FIXED]
 ]
-
-
-
 
 
 # Portfolio_LaoHuangNiu = [

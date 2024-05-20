@@ -22,7 +22,7 @@ if __name__ == "__main__":
     rebalance_days = 220  # 每 220 个交易日 rebalance 一次
 
     portfolio_funds_data_df = load_portfolio_funds_data(portfolio_df.index, start_date, end_date).ffill().bfill()  # 使用 bfill() 是为了防止第一行数据出现空值
-    portfolio_value_series = fund_portfolio_back_trade(portfolio_df, portfolio_funds_data_df, rebalance_days)
+    portfolio_value_series, funds_value_dict = fund_portfolio_back_trade(portfolio_df, portfolio_funds_data_df, rebalance_days)
     
     # 计算相关 KPI，并展示结果
     max_dd, dd_peak_date, dd_bottom_date, dd_peak_value, dd_bottom_value = calculate_max_dd(portfolio_value_series)
@@ -41,8 +41,21 @@ if __name__ == "__main__":
     for year, year_df in portfolio_value_series.groupby(portfolio_value_series.index.year):
         year_profit_percent = (year_df.iloc[-1] - year_df.iloc[0])/year_df.iloc[0] * 100
         print("{} 年，收益率 {:.2f} %".format(year, year_profit_percent))
+    
         
-    print("\n组合成员的情况：")
+    print("\n组合成员的情况")
+    for ticker in portfolio_funds_data_df.columns:
+        start_value = funds_value_dict[ticker]['fund_value'].iloc[0]
+        end_value = funds_value_dict[ticker]['fund_value'].iloc[-1]
+        profit_percent = (end_value - start_value)/start_value * 100
+        annaulized_profit_percent = ((1 + profit_percent/100) ** (1/years) - 1) * 100
+        # max_dd, dd_peak_date, dd_bottom_date, dd_peak_value, dd_bottom_value = calculate_max_dd(portfolio_funds_data_df[ticker])
+        # max_dd_percent = max_dd/dd_peak_value*100
+        print("{} {}: 利润 {:.2f}%, 年化：{:.2f}%".format(ticker, portfolio_df.loc[ticker, 'name'], profit_percent, annaulized_profit_percent))
+    
+    
+        
+    print("\n组合成员独立行情")
     for ticker in portfolio_funds_data_df.columns:
         start_value = portfolio_funds_data_df[ticker].iloc[0]
         end_value = portfolio_funds_data_df[ticker].iloc[-1]

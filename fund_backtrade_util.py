@@ -98,5 +98,5 @@ def fund_portfolio_back_trade(portfolio_df, portfolio_funds_data_df, rebalance_p
                 fund_value_df.loc[fund_value_df.index[-1], 'shares'] += shares_change
                 fund_value_df.loc[fund_value_df.index[-1], 'fund_value'] = current_portfolio_value * target_percent/100
     
-    return portfolio_value_series
+    return portfolio_value_series, funds_value_dict
 
